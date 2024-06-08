@@ -200,7 +200,7 @@ public class SettingsController implements Initializable{
 
     @Override
     public void initialize(URL url, ResourceBundle resource){
-
+        System.out.println("hello World");
     }
     
 }
