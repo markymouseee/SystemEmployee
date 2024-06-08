@@ -82,7 +82,7 @@ public class AdminLoginController implements Initializable{
 
     @FXML
     private void btnLogin(){
-        String sql = "SELECT * FROM admin WHERE (username = ? OR email = ?)";
+        String sql = "SELECT id, role, password FROM admin WHERE (username = ? OR email = ?)";
 
         connect = DBConnection.connect();
         try {
