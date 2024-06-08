@@ -170,6 +170,12 @@ public class EmployeeDataController implements Initializable{
     @FXML
     private TextField dashboard_search;
 
+    @FXML
+    private Text femaleDisplay;
+
+    @FXML
+    private Text maleDisplay;
+
      public ObservableList<EmployeeData> addEmployeeListData(){
 
         ObservableList<EmployeeData> listData = FXCollections.observableArrayList();
@@ -718,8 +724,47 @@ public class EmployeeDataController implements Initializable{
         }
     }
 
+    private void countOfMale(){
+        String sql = "SELECT COUNT(sex) FROM employeedata WHERE sex = 'Male'";
+
+        connect = DBConnection.connect();
+        int countData = 0;
+        try {
+            prepare = connect.prepareStatement(sql);
+            result = prepare.executeQuery();
+
+            while (result.next()) {
+                countData = result.getInt("COUNT(sex)");
+            }
+            maleDisplay.setText(String.valueOf(countData));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void countOfFemale(){
+        String sql = "SELECT COUNT(sex) FROM employeedata WHERE sex = 'Female'";
+        
+        connect = DBConnection.connect();
+        int countData = 0;
+        try {
+            prepare = connect.prepareStatement(sql);
+            result = prepare.executeQuery();
+
+            while (result.next()) {
+                countData = result.getInt("COUNT(sex)");
+            }
+
+            femaleDisplay.setText(String.valueOf(countData));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @FXML
     private void btnDashboard(){
+        countOfFemale();
+        countOfMale();
         dashboardShowListData();
         countOfUser();
         countOfSuperAdmin();
@@ -785,6 +830,9 @@ public class EmployeeDataController implements Initializable{
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        countOfFemale();
+        countOfMale();
         countOfUser();
         countOfAdmin();
         countOfSuperAdmin();
