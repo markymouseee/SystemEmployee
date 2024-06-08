@@ -34,6 +34,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import model.Session;
 import model.UserInfo;
+import passwordhasher.PasswordHash;
 
 public class SuperAdminController implements Initializable{
 
@@ -186,7 +187,7 @@ public class SuperAdminController implements Initializable{
         nameTextField.setText(String.valueOf(user.getFullname()));
         usernameTextField.setText(String.valueOf(user.getUsername()));
         emailTextField.setText(String.valueOf(user.getEmail()));
-        passwordField.setText(String.valueOf(user.getPassword()));
+        passwordField.setText("");
         chooseRole.setValue(String.valueOf(user.getRole()));
     }
 
@@ -343,6 +344,21 @@ public class SuperAdminController implements Initializable{
                     return;
                 }
 
+                String checkUsername = "SELECT username FROM admin WHERE username = ?";
+                prepare = connect.prepareStatement(checkUsername);
+                prepare.setString(1, usernameTextField.getText());
+                result = prepare.executeQuery();
+                
+                if(result.next()){
+                    Alert alert = new Alert(AlertType.ERROR);
+                    alert.setTitle("Error message");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Username: " + usernameTextField.getText() + " already existed");
+                    alert.showAndWait();
+                    return;
+                }
+
+
                 String checkErrorID = "SELECT uid FROM admin WHERE uid = '" + uidTextField.getText() + "'";
 
                 statement = connect.createStatement();
@@ -355,12 +371,14 @@ public class SuperAdminController implements Initializable{
                     alert.setContentText("UID: " + uidTextField.getText() + " already existed");
                     alert.showAndWait();
                 }else{
+                    String encryptPassword = PasswordHash.password_hash(passwordField.getText());
+
                     prepare = connect.prepareStatement(sql);
                     prepare.setString(1, uidTextField.getText());
                     prepare.setString(2, nameTextField.getText());
                     prepare.setString(3, usernameTextField.getText());
                     prepare.setString(4, emailTextField.getText());
-                    prepare.setString(5, passwordField.getText());
+                    prepare.setString(5, encryptPassword);
                     prepare.setString(6, (String)chooseRole.getSelectionModel().getSelectedItem());
                     prepare.executeUpdate();
 
@@ -407,7 +425,7 @@ public class SuperAdminController implements Initializable{
                     return;
                 }
 
-                String checkID = "SELECT employeeid FROM employeedata WHERE employeeid = ?";
+                String checkID = "SELECT uid FROM admin WHERE uid = ?";
                 
                 prepare = connect.prepareStatement(checkID);
                 prepare.setInt(1, Integer.parseInt(uidTextField.getText()));
@@ -454,11 +472,13 @@ public class SuperAdminController implements Initializable{
                         sql = "UPDATE admin SET name = ?, username = ?, email = ?, password = ?, role = ? WHERE uid = ?";
                     }
 
+                    String encryptPassword = PasswordHash.password_hash(passwordField.getText());
+
                     prepare = connect.prepareStatement(sql);
                     prepare.setString(1, nameTextField.getText());
                     prepare.setString(2, usernameTextField.getText());
                     prepare.setString(3, emailTextField.getText());
-                    prepare.setString(4, passwordField.getText());
+                    prepare.setString(4, encryptPassword);
 
                     if(!uidTextField.getText().equals("1")){
                         prepare.setString(5, (String)chooseRole.getSelectionModel().getSelectedItem());

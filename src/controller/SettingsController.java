@@ -23,6 +23,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import model.Session;
+import passwordhasher.PasswordHash;
 import databases.DBConnection;
 
 public class SettingsController implements Initializable{
@@ -92,14 +93,16 @@ public class SettingsController implements Initializable{
 
     @FXML
     private void btnConfirm(){
-        String sql = "SELECT * FROM admin WHERE id = ? AND password = ?";
+        String sql = "SELECT * FROM admin WHERE id = ?";
 
         connect = DBConnection.connect();
         try {
             prepare = connect.prepareStatement(sql);
             prepare.setInt(1, Session.getUserID());
-            prepare.setString(2, confirmPassword.getText());
             result = prepare.executeQuery();
+            result.next();
+            
+            boolean verifyPassword = PasswordHash.password_verify(confirmPassword.getText(), result.getString("password"));
 
             if(confirmPassword.getText().isEmpty()){
                 errorHandler.setText("Password field is required");
@@ -111,7 +114,7 @@ public class SettingsController implements Initializable{
                 alert.setContentText("Password field is required");
                 alert.showAndWait();
             }else{
-                if(result.next()){
+                if(verifyPassword){
                     errorHandler.setText("Success");
                     errorHandler.setFill(Color.web("198754"));
                     Alert alert = new Alert(AlertType.INFORMATION);

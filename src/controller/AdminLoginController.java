@@ -26,6 +26,7 @@ import javafx.stage.StageStyle;
 import databases.DBConnection;
 import model.AdminLogin;
 import model.Session;
+import passwordhasher.PasswordHash;
 
 public class AdminLoginController implements Initializable{
 
@@ -81,7 +82,7 @@ public class AdminLoginController implements Initializable{
 
     @FXML
     private void btnLogin(){
-        String sql = "SELECT id, role FROM admin WHERE (username = ? OR email = ?) AND password = ?";
+        String sql = "SELECT * FROM admin WHERE (username = ? OR email = ?)";
 
         connect = DBConnection.connect();
         try {
@@ -102,48 +103,54 @@ public class AdminLoginController implements Initializable{
                 prepare = connect.prepareStatement(sql);
                 prepare.setString(1, user.getUsername());
                 prepare.setString(2, user.getUsername());
-                prepare.setString(3, user.getPassword());
-
                 result = prepare.executeQuery();
                 
                 if(result.next()){
-                    Session.setUserID(result.getInt("id"));
-                    Session.setRole(result.getString("role"));
-                    errorHandler.setText("Successfully log in");
-                    errorHandler.setFill(Color.web("198754"));
+                    boolean verifyPassword = PasswordHash.password_verify(user.getPassword(), result.getString("password"));
+                    if(verifyPassword){
+                        Session.setUserID(result.getInt("id"));
+                        Session.setRole(result.getString("role"));
+                        errorHandler.setText("Successfully log in");
+                        errorHandler.setFill(Color.web("198754"));
+    
+                        Alert alert = new Alert(AlertType.INFORMATION);
+                        alert.setTitle("Success message");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Login successfullyy");
+                        alert.showAndWait();
+    
+                        Stage stage = new Stage();
+                        login.getScene().getWindow().hide();
+                        Parent root = FXMLLoader.load(getClass().getResource("../views/dashboard_layout.fxml"));
+                        Scene scene = new Scene(root);
+    
+                        root.setOnMousePressed((MouseEvent event) -> {
+                            x = event.getSceneX();
+                            y = event.getSceneY();
+                        });
+    
+                        root.setOnMouseDragged((MouseEvent event) -> {
+                            stage.setX(event.getScreenX() - x);
+                            stage.setY(event.getScreenY() - y);
+    
+                            stage.setOpacity(.8);
+                        });
+    
+                        root.setOnMouseReleased((MouseEvent event) -> {
+                            stage.setOpacity(1);
+                        });
+    
+                        stage.initStyle(StageStyle.TRANSPARENT);
+                        stage.setScene(scene);
+                        stage.show();
 
-                    Alert alert = new Alert(AlertType.INFORMATION);
-                    alert.setTitle("Success message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Login successfullyy");
-                    alert.showAndWait();
+                    }else{
+                        errorHandler.setText("Wrong password, please try again");
+                        errorHandler.setFill(Color.web("EE4266"));
+                    }
 
-                    Stage stage = new Stage();
-                    login.getScene().getWindow().hide();
-                    Parent root = FXMLLoader.load(getClass().getResource("../views/dashboard_layout.fxml"));
-                    Scene scene = new Scene(root);
-
-                    root.setOnMousePressed((MouseEvent event) -> {
-                        x = event.getSceneX();
-                        y = event.getSceneY();
-                    });
-
-                    root.setOnMouseDragged((MouseEvent event) -> {
-                        stage.setX(event.getScreenX() - x);
-                        stage.setY(event.getScreenY() - y);
-
-                        stage.setOpacity(.8);
-                    });
-
-                    root.setOnMouseReleased((MouseEvent event) -> {
-                        stage.setOpacity(1);
-                    });
-
-                    stage.initStyle(StageStyle.TRANSPARENT);
-                    stage.setScene(scene);
-                    stage.show();
                 }else{
-                    errorHandler.setText("Invalid username or password");
+                    errorHandler.setText("Username or email not found");
                     errorHandler.setFill(Color.web("EE4266"));
                 }
             
