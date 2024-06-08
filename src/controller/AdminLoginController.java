@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ResourceBundle;
+import java.util.regex.Pattern;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -27,6 +28,7 @@ import databases.DBConnection;
 import model.AdminLogin;
 import model.Session;
 import passwordhasher.PasswordHash;
+import model.SignUp;
 
 public class AdminLoginController implements Initializable{
 
@@ -36,6 +38,9 @@ public class AdminLoginController implements Initializable{
 
     private double x = 0;
     private double y = 0;
+
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
 
     @FXML
     private Pane login_form;
@@ -67,6 +72,9 @@ public class AdminLoginController implements Initializable{
     @FXML
     private AnchorPane email_form;
 
+    @FXML
+    private AnchorPane signup_form;
+
 
     @FXML
     private void forgotPassword(){
@@ -81,10 +89,55 @@ public class AdminLoginController implements Initializable{
     }
 
     @FXML
+    private void haveAnAccount(){
+        signup_form.setVisible(false);
+        loginForm.setVisible(true);
+    }
+
+    @FXML
+    private void createAccount(){
+        loginForm.setVisible(false);
+        signup_form.setVisible(true);
+    }
+
+    @FXML
     private void btnLogin(){
+        String storeUser = "SELECT * FROM storeuser WHERE (username = ? OR email = ?)";
+        
+        connect = DBConnection.connect();
+        try {
+
+            AdminLogin temp_user = null;
+
+            if(showpass_form.isVisible()){
+                temp_user = new AdminLogin(usernameField.getText(), passwordField.getText());
+            }else if(hidepass_form.isVisible()){
+                temp_user = new AdminLogin(usernameField.getText(), showpasswordField.getText());
+            }
+            prepare = connect.prepareStatement(storeUser);
+            prepare.setString(1, temp_user.getUsername());
+            prepare.setString(2, temp_user.getUsername());
+            result = prepare.executeQuery();
+
+            if(result.next()){
+                boolean Verify = PasswordHash.password_verify(temp_user.getPassword(), result.getString("password"));
+                if(Verify){
+                    showAlert(AlertType.INFORMATION, "Your account is pending, please wait for admin approval.", "Message from admin");
+                    return;
+                }else{
+                    errorHandler.setText("Wrong password, please try again");
+                    errorHandler.setFill(Color.web("EE4266"));
+                }
+                return;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         String sql = "SELECT id, role, password FROM admin WHERE (username = ? OR email = ?)";
 
-        connect = DBConnection.connect();
+        
         try {
             
             AdminLogin user = null;
@@ -116,7 +169,7 @@ public class AdminLoginController implements Initializable{
                         Alert alert = new Alert(AlertType.INFORMATION);
                         alert.setTitle("Success message");
                         alert.setHeaderText(null);
-                        alert.setContentText("Login successfullyy");
+                        alert.setContentText("Login successfully");
                         alert.showAndWait();
     
                         Stage stage = new Stage();
@@ -186,6 +239,115 @@ public class AdminLoginController implements Initializable{
 
     @Override
     public void initialize(URL url, ResourceBundle resource){
+    }
 
+    /*SIGN UP CONTROLLER */
+
+    @FXML
+    private TextField new_fullname;
+
+    @FXML
+    private TextField new_username;
+
+    @FXML
+    private TextField new_email;
+
+    @FXML
+    private TextField new_password;
+
+    @FXML
+    private TextField new_retype_password;
+
+    @FXML
+    private void btnSignUp(){
+        String sql = "INSERT INTO storeuser (name, username, email, password) VALUES (?, ?, ?, ?)";
+
+        connect = DBConnection.connect();
+
+        SignUp user = new SignUp(new_fullname.getText(), new_username.getText(), new_email.getText(), new_password.getText());
+        try {
+            if(user.getName().isEmpty() || user.getUsername().isEmpty() || user.getEmail().isEmpty() || user.getPassword().isEmpty()){
+                showAlert(AlertType.ERROR, "Please fill the blanks", "Error message");
+            }else{
+                String checkusername = "SELECT username FROM admin WHERE username = ?";
+
+                prepare = connect.prepareStatement(checkusername);
+                prepare.setString(1, new_username.getText());
+                result = prepare.executeQuery();
+
+                if(result.next()){
+                    showAlert(AlertType.ERROR, "Username: " + new_username.getText() + " already existed", "Error message");
+                    return;
+                }
+
+                String checkusernameStore = "SELECT username FROM storeuser WHERE username = ?";
+                prepare = connect.prepareStatement(checkusernameStore);
+                prepare.setString(1, new_username.getText());
+                result = prepare.executeQuery();
+
+                if(result.next()){
+                    showAlert(AlertType.ERROR, "Username: " + new_username.getText() + " already existed", "Error message");
+                    return;
+                }
+
+                if(!EMAIL_PATTERN.matcher(new_email.getText()).matches()){
+                    showAlert(AlertType.ERROR, "\t\t\t\tInvalid email\n\nPlease put and @ in your email (ex. name@example.com)", "Error message");
+                    return;
+                }
+
+                String checkemail = "SELECT email FROM admin WHERE email = ?";
+
+                prepare = connect.prepareStatement(checkemail);
+                prepare.setString(1, new_email.getText());
+                result = prepare.executeQuery();
+
+                if(result.next()){
+                    showAlert(AlertType.ERROR, "Email: " + new_email.getText() + " already registered", "Error message");
+                    return;
+                }
+
+                String checkemailStore = "SELECT email FROM storeuser WHERE email = ?";
+
+                prepare = connect.prepareStatement(checkemailStore);
+                prepare.setString(1, new_email.getText());
+                result = prepare.executeQuery();
+                
+                if(result.next()){
+                    showAlert(AlertType.ERROR, "Email: " + new_email.getText() + " already registered", "Error message");
+                    return;
+                }
+
+                if(!new_password.getText().equals(new_retype_password.getText())){
+                    showAlert(AlertType.ERROR, "Password doesn't match", "Error message");
+                    return;
+                }
+
+                if(new_password.getText().length() < 6){
+                    showAlert(AlertType.ERROR, "Your password must be atleast 6 characters.", "Error message");
+                    return;
+                }
+
+                showAlert(AlertType.INFORMATION, "Registration requested successfully, please wait for admin\n\t\t\t\tapproval.", "Message");
+
+                String encryptPassword = PasswordHash.password_hash(user.getPassword());
+
+                prepare = connect.prepareStatement(sql);
+                prepare.setString(1, user.getName());
+                prepare.setString(2, user.getUsername());
+                prepare.setString(3, user.getEmail());
+                prepare.setString(4, encryptPassword);
+                prepare.executeUpdate();
+            }
+        } catch (Exception e) {
+           e.printStackTrace();
+        }
+    }
+
+    private void showAlert(AlertType alertType, String contentText, String title){
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(contentText);
+        alert.showAndWait();
     }
 }

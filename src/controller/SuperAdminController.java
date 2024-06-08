@@ -33,6 +33,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import model.Session;
+import model.SignUp;
 import model.UserInfo;
 import passwordhasher.PasswordHash;
 
@@ -681,7 +682,7 @@ public class SuperAdminController implements Initializable{
 
     @Override
     public void initialize(URL url, ResourceBundle resource){
-        String sql = "SELECT * FROM admin WHERE id = ?";
+        String sql = "SELECT * FROM admin WHERE uid = ?";
 
         connect = DBConnection.connect();
         try {
@@ -697,11 +698,294 @@ public class SuperAdminController implements Initializable{
             e.printStackTrace();
         }
 
+        countOfPending();
+        showPendingListData();
         countOfAdmin();
         countOfSuperAdmin();
         countofUser();
         adminDashboardShowListUser();
         ObservableList<String> roleList = FXCollections.observableArrayList("Super Admin", "Admin", "User");
         chooseRole.setItems(roleList);
+    }
+
+    @FXML
+    private TableView<SignUp> pending_table;
+
+    @FXML
+    private TableColumn<SignUp, String> pending_name;
+
+    @FXML
+    private TableColumn<SignUp, String> pending_username;
+
+    @FXML
+    private TableColumn<SignUp, String> pending_email;
+
+    @FXML
+    private TableColumn<SignUp, String> pending_password;
+
+    @FXML
+    private TextField pendingSearch;
+
+    @FXML
+    private AnchorPane dashboard_form;
+
+    @FXML
+    private AnchorPane pending_form;
+
+    @FXML
+    private Button adminbtn;
+
+    @FXML
+    private Button pendingbtn;
+
+    @FXML
+    private Button pendingText;
+
+    @FXML
+    private TextField new_uid;
+
+    @FXML
+    private TextField new_name;
+
+    @FXML
+    private TextField new_username;
+
+    @FXML
+    private TextField new_email;
+    
+    @FXML
+    private TextField new_password;
+
+    @FXML
+    private TextField new_role;
+
+    public ObservableList<SignUp> addPendingUser(){
+        ObservableList<SignUp> listPending = FXCollections.observableArrayList();
+
+        String sql = "SELECT * FROM storeuser";
+
+        connect = DBConnection.connect();
+
+        try {
+            prepare = connect.prepareStatement(sql);
+            result = prepare.executeQuery();
+
+            SignUp user1;
+            while (result.next()) {
+                user1 = new SignUp(result.getString("name"), result.getString("username"), result.getString("email"), result.getString("password"));
+                listPending.add(user1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return listPending;
+    }
+
+    private ObservableList<SignUp> addPendingList;
+    private FilteredList<SignUp> filter1;
+
+    private void showPendingListData(){
+        addPendingList = addPendingUser();
+        filter1 = new FilteredList<>(addPendingList, p -> true);
+
+        pending_name.setCellValueFactory(new PropertyValueFactory<>("name"));
+        pending_username.setCellValueFactory(new PropertyValueFactory<>("username"));
+        pending_email.setCellValueFactory(new PropertyValueFactory<>("email"));
+        pending_password.setCellValueFactory(new PropertyValueFactory<>("password"));
+
+        pending_table.setItems(filter1);
+
+        pendingSearch.textProperty().addListener((observable, oldValue, newValue) -> {
+            filter1.setPredicate(user1 -> {
+                if(newValue == null || newValue.isEmpty()) return true;
+
+                String searchKey = newValue.toLowerCase();
+
+                if(user1.getName().toLowerCase().contains(searchKey)){
+                    return true;
+                }else if(user1.getUsername().toLowerCase().contains(searchKey)){
+                    return true;
+                }else if(user1.getEmail().toLowerCase().contains(searchKey)){
+                    return true;
+                }else if(user1.getPassword().toLowerCase().contains(searchKey)){
+                    return true;
+                }
+                return false;
+            });
+        });
+
+    }
+
+    @FXML
+    private void adminDashboard(){
+        adminDashboardShowListUser();
+        countOfAdmin();
+        countofUser();
+        countOfSuperAdmin();
+        countOfPending();
+        dashboard_form.setVisible(true);
+        pending_form.setVisible(false);
+        adminbtn.setStyle("-fx-background-color: #03AED2; -fx-background-radius: 8px; -fx-text-fill: #ffff;");
+        pendingbtn.setStyle("-fx-background-color: transparent;");
+    }
+
+    @FXML
+    private void pendingDashboard(){
+        countOfPending();
+        showPendingListData();
+        pending_form.setVisible(true);
+        dashboard_form.setVisible(false);
+        pendingbtn.setStyle("-fx-background-color: #03AED2; -fx-background-radius: 8px; -fx-text-fill: #ffff;");
+        adminbtn.setStyle("-fx-background-color: transparent;");
+    }
+
+    private void countOfPending(){
+        String sql = "SELECT COUNT(id) FROM storeuser";
+
+        connect = DBConnection.connect();
+        int countData = 0;
+        try {
+            prepare = connect.prepareStatement(sql);
+            result = prepare.executeQuery();
+
+            while (result.next()) {
+                countData = result.getInt("COUNT(id)");
+            }
+            pendingText.setText(String.valueOf(countData));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @FXML
+    private void selectPending(){
+        SignUp user = pending_table.getSelectionModel().getSelectedItem();
+
+        int num = pending_table.getSelectionModel().getSelectedIndex();
+
+        if((num -1) < -1) return;
+
+        new_name.setText(String.valueOf(user.getName()));
+        new_username.setText(String.valueOf(user.getUsername()));
+        new_email.setText(String.valueOf(user.getEmail()));
+        new_password.setText(String.valueOf(user.getPassword()));
+    }
+
+    @FXML
+    private void deleteRequest(){
+        String deleteStoreUser = "DELETE FROM storeuser WHERE username = ?";
+
+        connect = DBConnection.connect();
+        try {
+
+            Alert alert = new Alert(AlertType.CONFIRMATION);
+            alert.setHeaderText(null);
+            alert.setTitle("Confirmation message");
+            alert.setContentText("Are you sure want to delete this pending request?");
+            Optional<ButtonType> option = alert.showAndWait();
+
+            if(option.get().equals(ButtonType.OK)){
+                prepare = connect.prepareStatement(deleteStoreUser);
+                prepare.setString(1, new_username.getText());
+                prepare.executeUpdate();
+                showPendingListData();
+                countOfPending();
+                new_uid.setText("");
+                new_name.setText("");
+                new_username.setText("");
+                new_email.setText("");
+                new_password.setText("");
+                new_role.setText("User");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void acceptRequest(){
+        String sql = "INSERT INTO admin (uid, name, username, email, password, role) VALUES (?, ?, ?, ?, ?, ?)";
+
+        connect = DBConnection.connect();
+        SignUp user = new SignUp(new_name.getText(), new_username.getText(), new_email.getText(), new_password.getText());
+        try {
+            if(new_uid.getText().isEmpty()){
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error message");
+                alert.setContentText("Please put an UID");
+                alert.setHeaderText(null);
+                alert.showAndWait();
+                return;
+            }
+
+            String checkUID = "SELECT uid FROM admin WHERE uid = ?";
+
+            prepare = connect.prepareStatement(checkUID);
+            prepare.setString(1, new_uid.getText());
+            result = prepare.executeQuery();
+
+            if(result.next()){
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error message");
+                alert.setContentText("UID: " + new_uid.getText() + " already existed");
+                alert.setHeaderText(null);
+                alert.showAndWait();
+                return;
+            }
+
+            try {
+                Integer.parseInt(new_uid.getText());
+            } catch (NumberFormatException e) {
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error message");
+                alert.setHeaderText(null);
+                alert.setContentText("UID must be a number");
+                alert.showAndWait();
+                return;
+            }
+
+            if(new_uid.getText().equals("0")){
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error message");
+                alert.setHeaderText(null);
+                alert.setContentText("Invalid ID");
+                alert.showAndWait();
+                return;
+            }
+
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Accepted successfully");
+            alert.showAndWait();
+
+            prepare = connect.prepareStatement(sql);
+            prepare.setInt(1, Integer.parseInt(new_uid.getText()));
+            prepare.setString(2, user.getName());
+            prepare.setString(3, user.getUsername());
+            prepare.setString(4, user.getEmail());
+            prepare.setString(5, user.getPassword());
+            prepare.setString(6, new_role.getText());
+            prepare.executeUpdate();
+
+            String deleteStoreUser = "DELETE FROM storeuser WHERE username = ?";
+
+            prepare = connect.prepareStatement(deleteStoreUser);
+            prepare.setString(1, user.getUsername());
+            prepare.executeUpdate();
+            showPendingListData();
+            countOfPending();
+            new_uid.setText("");
+            new_name.setText("");
+            new_username.setText("");
+            new_email.setText("");
+            new_password.setText("");
+            new_role.setText("User");
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+
     }
 }
