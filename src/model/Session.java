@@ -3,6 +3,8 @@ package model;
 public class Session {
     private static int userId;
     private static String role;
+    private static String username;
+
     public static int getUserID(){
         return userId;
     }
@@ -17,6 +19,14 @@ public class Session {
 
     public static void setUserID(int userID) {
         Session.userId = userID;
+    }
+
+    public static String getUsername(){
+        return username;
+    }
+
+    public static void setUsername(String username){
+        Session.username = username;
     }
 
     public static void clearSession(){

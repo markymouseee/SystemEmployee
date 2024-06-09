@@ -18,6 +18,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -30,6 +31,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import model.EmployeeData;
 import model.Session;
+import passwordhasher.PasswordHash;
 import javafx.scene.control.Button;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -535,6 +537,35 @@ public class EmployeeDataController implements Initializable{
     }
 
     @FXML
+    private void editProfile(){
+        dashboard_form.setVisible(false);
+        employeetable_form.setVisible(false);
+        edit_form.setVisible(true);
+        dashboardbtn.setStyle("-fx-background-color: transparent;");
+        employeetablebtn.setStyle("-fx-background-color: transparent;");
+
+        String sql = "SELECT * FROM admin WHERE id = ?";
+
+        connect = DBConnection.connect();
+
+        try {
+            prepare = connect.prepareStatement(sql);
+            prepare.setInt(1, Session.getUserID());
+            result = prepare.executeQuery();
+
+            while (result.next()) {
+                display_edit_name.setText(result.getString("name"));
+                display_edit_email.setText(result.getString("email"));
+                edit_email.setText(result.getString("email"));
+                edit_username.setText(result.getString("username"));
+                edit_name.setText(result.getString("name"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
     private void btnSettiings(){
 
         String sql = "SELECT role FROM admin WHERE role = ?";
@@ -773,6 +804,7 @@ public class EmployeeDataController implements Initializable{
         dashbordDetails();
         employeetable_form.setVisible(false);
         dashboard_form.setVisible(true);
+        edit_form.setVisible(false);
         employeetablebtn.setStyle("-fx-background-color: transparent;");
         dashboardbtn.setStyle("-fx-background-color: #03AED2; -fx-background-radius: 8px; -fx-text-fill: #ffff;");
     }
@@ -793,6 +825,7 @@ public class EmployeeDataController implements Initializable{
 
                 if("Admin".equals(getRole) || "Super Admin".equals(getRole)){
                     dashboard_form.setVisible(false);
+                    edit_form.setVisible(false);
                     employeetable_form.setVisible(true);
                     dashboardbtn.setStyle("-fx-background-color: transparent;");
                     employeetablebtn.setStyle("-fx-background-color: #03AED2; -fx-background-radius: 8px; -fx-text-fill: #ffff;");
@@ -846,5 +879,137 @@ public class EmployeeDataController implements Initializable{
         ObservableList<String> positionList = FXCollections.observableArrayList("Cyber Security Engineer", "Cyber Security Analyst", "Cloud Security Analyst", "Software Engineer", "Network Engineer", "Full Stack Web Developer", "Data Analyst", "Janitor");
         choosePosition.setItems(positionList);
     }
+
+   /*EDIT PROFILE CONTROLLER */
+
+   @FXML
+   private AnchorPane edit_form;
+
+   @FXML
+   private TextField edit_name;
+
+   @FXML
+   private TextField edit_username;
+
+   @FXML
+   private TextField edit_email;
+
+   @FXML
+   private PasswordField edit_password;
+
+   @FXML
+   private PasswordField edit_retype_password;
+
+   @FXML
+   private Text display_edit_name;
+
+   @FXML
+   private Text display_edit_email;
+
+   @FXML
+   private void btnUpdateProfile(){
+        String sql = "UPDATE admin SET name = ?, username = ?, email = ?, password = ? WHERE id = ?";
+
+        connect = DBConnection.connect();
+        try {
+            if(edit_name.getText().isEmpty() || edit_username.getText().isEmpty() || edit_password.getText().isEmpty() || edit_retype_password.getText().isEmpty()){
+                showAlert(AlertType.ERROR, "Error message", "Please fill the blank fields");
+                return;
+            }
+
+            String checkUsername = "SELECT username FROM admin WHERE username = ?";
+
+            prepare = connect.prepareStatement(checkUsername);
+            prepare.setString(1, edit_username.getText());
+            result = prepare.executeQuery();
+
+            if(result.next()){
+               if(!edit_username.getText().equals(Session.getUsername())){
+                    showAlert(AlertType.ERROR, "Error message", "Username: " + edit_username.getText() + " already taken.");
+                    return;
+               }
+               
+            }
+
+            if(edit_password.getText().length() < 6){
+                showAlert(AlertType.ERROR, "Error message", "Password must be atleast 6 characters.");
+                return;
+            }
+
+            if(!edit_password.getText().equals(edit_retype_password.getText())){
+                showAlert(AlertType.ERROR, "Error message", "Password doesn't match");
+                return;
+            }
+
+            Alert alert = new Alert(AlertType.CONFIRMATION);
+            alert.setTitle("Confirmation message");
+            alert.setHeaderText(null);
+            alert.setContentText("Are you sure want to update your profile?");
+            Optional<ButtonType> option = alert.showAndWait();
+
+            if(option.get().equals(ButtonType.OK)){
+                String encryptPassword = PasswordHash.password_hash(edit_password.getText());
+    
+                prepare = connect.prepareStatement(sql);
+                prepare.setString(1, edit_name.getText());
+                prepare.setString(2, edit_username.getText());
+                prepare.setString(3, edit_email.getText());
+                prepare.setString(4, encryptPassword);
+                prepare.setInt(5, Session.getUserID());
+                prepare.executeUpdate();
+            }
+
+            showAlert(AlertType.INFORMATION, "Success", "Profile updated successfully.");
+
+            if(Session.getUserID() != 1){
+
+                Alert alert2 = new Alert(AlertType.WARNING);
+                alert2.setTitle("Session expired");
+                alert2.setHeaderText(null);
+                alert2.setContentText("Session Expired");
+                alert2.showAndWait();
+                    logout.getScene().getWindow().hide();
+                    try {
+                        Stage stage = new Stage();
+                        Parent root = FXMLLoader.load(getClass().getResource("../views/login_layout.fxml"));
+                        Scene scene = new Scene(root);
+        
+                        root.setOnMousePressed((MouseEvent event) -> {
+                            x = event.getSceneX();
+                            y = event.getSceneY();
+                        });
+        
+                        root.setOnMouseDragged((MouseEvent event) -> {
+                            stage.setX(event.getScreenX() - x);
+                            stage.setY(event.getScreenY() - y);
+        
+                            stage.setOpacity(.8);
+                        });
+        
+                        root.setOnMouseReleased((MouseEvent event) -> {
+                            stage.setOpacity(1);
+                        });
+        
+                        stage.initStyle(StageStyle.TRANSPARENT);
+                        stage.setScene(scene);
+                        stage.show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+   }
+
+   private void showAlert(AlertType alertType, String title, String contentText){
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(contentText);
+        alert.showAndWait();
+   }
+
     
 }

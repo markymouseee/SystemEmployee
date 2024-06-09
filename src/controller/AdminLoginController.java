@@ -135,7 +135,7 @@ public class AdminLoginController implements Initializable{
             e.printStackTrace();
         }
 
-        String sql = "SELECT id, role, password FROM admin WHERE (username = ? OR email = ?)";
+        String sql = "SELECT id, role, username, password FROM admin WHERE (username = ? OR email = ?)";
 
         
         try {
@@ -163,6 +163,7 @@ public class AdminLoginController implements Initializable{
                     if(verifyPassword){
                         Session.setUserID(result.getInt("id"));
                         Session.setRole(result.getString("role"));
+                        Session.setUsername(result.getString("username"));
                         errorHandler.setText("Successfully log in");
                         errorHandler.setFill(Color.web("198754"));
     
@@ -181,7 +182,6 @@ public class AdminLoginController implements Initializable{
                             x = event.getSceneX();
                             y = event.getSceneY();
                         });
-    
                         root.setOnMouseDragged((MouseEvent event) -> {
                             stage.setX(event.getScreenX() - x);
                             stage.setY(event.getScreenY() - y);
@@ -192,7 +192,7 @@ public class AdminLoginController implements Initializable{
                         root.setOnMouseReleased((MouseEvent event) -> {
                             stage.setOpacity(1);
                         });
-    
+
                         stage.initStyle(StageStyle.TRANSPARENT);
                         stage.setScene(scene);
                         stage.show();
@@ -307,7 +307,6 @@ public class AdminLoginController implements Initializable{
                 }
 
                 String checkemailStore = "SELECT email FROM storeuser WHERE email = ?";
-
                 prepare = connect.prepareStatement(checkemailStore);
                 prepare.setString(1, new_email.getText());
                 result = prepare.executeQuery();

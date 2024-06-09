@@ -547,7 +547,7 @@ public class SuperAdminController implements Initializable{
         connect = DBConnection.connect();
 
         try {
-            if(uidTextField.getText().isEmpty() || nameTextField.getText().isEmpty() || usernameTextField.getText().isEmpty() || emailTextField.getText().isEmpty() || passwordField.getText().isEmpty() || chooseRole.getSelectionModel().getSelectedItem() == null){
+            if(uidTextField.getText().isEmpty() || nameTextField.getText().isEmpty() || usernameTextField.getText().isEmpty() || emailTextField.getText().isEmpty() || chooseRole.getSelectionModel().getSelectedItem() == null){
                 Alert alert = new Alert(AlertType.ERROR);
                 alert.setTitle("Error message");
                 alert.setHeaderText(null);
