@@ -291,7 +291,7 @@ public class AdminLoginController implements Initializable{
                 }
 
                 if(!EMAIL_PATTERN.matcher(new_email.getText()).matches()){
-                    showAlert(AlertType.ERROR, "\t\t\t\tInvalid email\n\nPlease put and @ in your email (ex. name@example.com)", "Error message");
+                    showAlert(AlertType.ERROR, "\t\t\t\tInvalid email\n\nPlease put an @ in your email (ex. name@example.com)", "Error message");
                     return;
                 }
 

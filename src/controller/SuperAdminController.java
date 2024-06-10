@@ -613,6 +613,43 @@ public class SuperAdminController implements Initializable{
                 countOfSuperAdmin();
                 countofUser();
             }
+
+            if(Session.getUserID() != 1){
+
+                Alert alert2 = new Alert(AlertType.WARNING);
+                alert2.setTitle("Session expired");
+                alert2.setHeaderText(null);
+                alert2.setContentText("Session Expired");
+                alert2.showAndWait();
+                    logout.getScene().getWindow().hide();
+                    try {
+                        Stage stage = new Stage();
+                        Parent root = FXMLLoader.load(getClass().getResource("../views/login_layout.fxml"));
+                        Scene scene = new Scene(root);
+        
+                        root.setOnMousePressed((MouseEvent event) -> {
+                            x = event.getSceneX();
+                            y = event.getSceneY();
+                        });
+        
+                        root.setOnMouseDragged((MouseEvent event) -> {
+                            stage.setX(event.getScreenX() - x);
+                            stage.setY(event.getScreenY() - y);
+        
+                            stage.setOpacity(.8);
+                        });
+        
+                        root.setOnMouseReleased((MouseEvent event) -> {
+                            stage.setOpacity(1);
+                        });
+        
+                        stage.initStyle(StageStyle.TRANSPARENT);
+                        stage.setScene(scene);
+                        stage.show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
         }
 
         } catch (Exception e) {
@@ -682,7 +719,7 @@ public class SuperAdminController implements Initializable{
 
     @Override
     public void initialize(URL url, ResourceBundle resource){
-        String sql = "SELECT * FROM admin WHERE uid = ?";
+        String sql = "SELECT * FROM admin WHERE id = ?";
 
         connect = DBConnection.connect();
         try {

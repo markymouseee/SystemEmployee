@@ -478,7 +478,7 @@
                                     <TextField fx:id="edit_email" editable="false" layoutX="179.0" layoutY="323.0" prefHeight="36.0" prefWidth="312.0" promptText="Email" styleClass="textField" />
                                     <TextField fx:id="edit_username" layoutX="179.0" layoutY="267.0" prefHeight="36.0" prefWidth="312.0" promptText="Username" styleClass="textField" />
                                     <TextField fx:id="edit_name" layoutX="179.0" layoutY="211.0" prefHeight="36.0" prefWidth="312.0" promptText="Fullname" styleClass="textField" />
-                                    <Text layoutX="83.0" layoutY="235.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Fullname:">
+                                    <Text layoutX="85.0" layoutY="235.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Fullname:">
                                        <font>
                                           <Font name="Berlin Sans FB" size="18.0" />
                                        </font>
@@ -493,17 +493,17 @@
                                           <Font name="Berlin Sans FB" size="18.0" />
                                        </font>
                                     </Text>
-                                    <Text layoutX="83.0" layoutY="409.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Password:">
+                                    <Text layoutX="48.0" layoutY="406.0" strokeType="OUTSIDE" strokeWidth="0.0" text="New password:">
                                        <font>
                                           <Font name="Berlin Sans FB" size="18.0" />
                                        </font>
                                     </Text>
-                                    <Text layoutX="22.0" layoutY="465.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Re-type password:">
+                                    <Text layoutX="24.0" layoutY="465.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Re-type password:">
                                        <font>
                                           <Font name="Berlin Sans FB" size="18.0" />
                                        </font>
                                     </Text>
-                                    <Text fx:id="display_edit_email" fill="#003a61" layoutX="190.0" layoutY="164.0" strokeType="OUTSIDE" strokeWidth="0.0" textAlignment="CENTER" wrappingWidth="280.0">
+                                    <Text fx:id="display_edit_email" fill="#003a61" layoutX="190.0" layoutY="161.0" strokeType="OUTSIDE" strokeWidth="0.0" textAlignment="CENTER" wrappingWidth="280.0">
                                        <font>
                                           <Font name="SansSerif Italic" size="13.0" />
                                        </font>

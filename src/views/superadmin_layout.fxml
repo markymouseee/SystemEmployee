@@ -185,13 +185,13 @@
                                           <Font name="Berlin Sans FB" size="19.0" />
                                        </font>
                                     </Text>
-                                    <TextField fx:id="usernameTextField" layoutX="125.0" layoutY="676.0" prefHeight="32.0" prefWidth="217.0" promptText="Username" styleClass="textField" />
+                                    <TextField fx:id="usernameTextField" editable="false" layoutX="125.0" layoutY="676.0" prefHeight="32.0" prefWidth="217.0" promptText="Username" styleClass="textField" />
                                     <Text layoutX="25.0" layoutY="697.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Username:">
                                        <font>
                                           <Font name="Berlin Sans FB" size="19.0" />
                                        </font>
                                     </Text>
-                                    <TextField fx:id="emailTextField" layoutX="513.0" layoutY="559.0" prefHeight="32.0" prefWidth="217.0" promptText="Email" styleClass="textField" />
+                                    <TextField fx:id="emailTextField" editable="false" layoutX="513.0" layoutY="559.0" prefHeight="32.0" prefWidth="217.0" promptText="Email" styleClass="textField" />
                                     <ComboBox fx:id="chooseRole" layoutX="513.0" layoutY="675.0" prefHeight="32.0" prefWidth="217.0" promptText="Choose" styleClass="textField" />
                                     <Text layoutX="407.0" layoutY="582.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Email:">
                                        <font>
