@@ -408,7 +408,7 @@ public class SuperAdminController implements Initializable{
         connect = DBConnection.connect();
         try{
 
-            if(uidTextField.getText().isEmpty() || nameTextField.getText().isEmpty() || usernameTextField.getText().isEmpty() || emailTextField.getText().isEmpty() || passwordField.getText().isEmpty() || chooseRole.getSelectionModel().getSelectedItem() == null){
+            if(uidTextField.getText().isEmpty() || nameTextField.getText().isEmpty() || usernameTextField.getText().isEmpty() || emailTextField.getText().isEmpty() || chooseRole.getSelectionModel().getSelectedItem() == null){
                 Alert alert = new Alert(AlertType.ERROR);
                 alert.setTitle("Error message");
                 alert.setHeaderText(null);
@@ -463,29 +463,27 @@ public class SuperAdminController implements Initializable{
 
                 alert.setTitle("Confirmation message");
                 alert.setHeaderText(null);
-                alert.setContentText("Are you sure want to update UID: " + uidTextField.getText() + "?");
+                alert.setContentText("Note: Password can't be update\n\nAre you sure want to update UID: " + uidTextField.getText() + "?");
                 Optional<ButtonType> option = alert.showAndWait();
 
                 if(option.get().equals(ButtonType.OK)){
                     if(uidTextField.getText().equals("1")){
-                        sql = "UPDATE admin SET name = ?, username = ?, email = ?, password = ? WHERE uid = ?";
+                        sql = "UPDATE admin SET name = ?, username = ?, email = ? WHERE uid = ?";
                     }else{
-                        sql = "UPDATE admin SET name = ?, username = ?, email = ?, password = ?, role = ? WHERE uid = ?";
+                        sql = "UPDATE admin SET name = ?, username = ?, email = ?, role = ? WHERE uid = ?";
                     }
 
-                    String encryptPassword = PasswordHash.password_hash(passwordField.getText());
 
                     prepare = connect.prepareStatement(sql);
                     prepare.setString(1, nameTextField.getText());
                     prepare.setString(2, usernameTextField.getText());
                     prepare.setString(3, emailTextField.getText());
-                    prepare.setString(4, encryptPassword);
 
                     if(!uidTextField.getText().equals("1")){
-                        prepare.setString(5, (String)chooseRole.getSelectionModel().getSelectedItem());
-                        prepare.setString(6, uidTextField.getText());
-                    }else{
+                        prepare.setString(4, (String)chooseRole.getSelectionModel().getSelectedItem());
                         prepare.setString(5, uidTextField.getText());
+                    }else{
+                        prepare.setString(4, uidTextField.getText());
                     }
 
                     prepare.executeUpdate();
